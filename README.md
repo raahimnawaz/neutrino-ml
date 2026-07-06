@@ -1,7 +1,14 @@
 # neutrino-ml
 
+[![tests](https://github.com/raahimnawaz/neutrino-ml/actions/workflows/tests.yml/badge.svg)](https://github.com/raahimnawaz/neutrino-ml/actions/workflows/tests.yml)
+[![python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
+[![ROOT](https://img.shields.io/badge/ROOT-RDataFrame-orange.svg)](https://root.cern/)
+[![data](https://img.shields.io/badge/data-ATLAS%20Open%20Data%2013%20TeV-red.svg)](https://opendata.atlas.cern/)
+[![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 Machine learning for **neutrinos** on real ATLAS Open Data (13 TeV LHC proton–proton
-collisions), read from CERN ROOT `TTree`s with `RDataFrame`.
+collisions), read from CERN ROOT `TTree`s with `RDataFrame`. A neutrino is invisible — it
+escapes as missing energy — so this reconstructs and classifies it the way LHC physicists do.
 
 ## The premise: a neutrino is missing energy
 
@@ -50,6 +57,8 @@ conda activate neutrino-ml
 python scripts/download_data.py   # reduced W dataset -> data/root/{mc,data}/  (skips existing)
 python -m src.pipeline            # Task A: classify W->l nu vs background (uses real data if present)
 python -m src.task_b_reco         # Task B: reconstruct the neutrino pz + W mass  -> results/wmass_reco.png
+python -m src.task_b_regression   # Task B stretch: ML neutrino-pz regressor
+python -m src.gnn_taskA           # Task A rep-3: event-graph GNN (needs pytorch + torch_geometric)
 ```
 
 **No download needed** — the whole pipeline is also proven on a **synthetic** ntuple:
@@ -65,8 +74,14 @@ pytest tests/                     # physics unit tests (pure numpy, no ROOT)
 | | |
 |---|---|
 | events selected | 78,958 W→ℓν signal / 36,231 background |
-| Task A — weighted AUC | **XGBoost 0.825**, logistic-regression 0.733 |
+| Task A — weighted AUC | **XGBoost 0.825**, logistic-regression 0.733, event-GNN 0.781 |
 | Task B — reconstructed W mass | **median 80.38 GeV** (PDG: 80.379), 59% with a real ν-pz solution |
+
+**Three representations of the same events** (the project's core comparison): engineered
+features → XGBoost (0.825) ≳ logistic regression (0.733); particle-level object graph →
+GNN (0.781, `src/gnn_taskA.py`). The GNN learns straight from the objects with no hand-crafted
+summary, but on this ~2–6-object final state it doesn't beat gradient boosting — the expected
+"trees win on low-dimensional structured data" result, and an honest representation comparison.
 
 Real NLO MC (Sherpa W+jets) contains ~14% **negative-weight events** — a genuine generator
 feature. The classifiers train on `|w|` (standard HEP practice); the significance keeps the
@@ -116,6 +131,8 @@ src/
   evaluation.py    weighted AUC, significance scan, SIC, plots, W-mass reconstruction
   pipeline.py      Task A end-to-end runner (python -m src.pipeline)
   task_b_reco.py   Task B: neutrino-pz + W-mass reconstruction (python -m src.task_b_reco)
+  task_b_regression.py  Task B stretch: ML neutrino-pz regressor
+  gnn_taskA.py     Task A representation 3: event-graph GNN (pytorch + torch_geometric)
 scripts/
   samples.json     ATLAS Open Data process -> file mapping (signal=wjets, bkg=others)
   download_data.py XRootD downloader for the reduced W dataset

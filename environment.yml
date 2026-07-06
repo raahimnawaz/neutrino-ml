@@ -14,5 +14,7 @@ dependencies:
   - matplotlib
   - pyyaml
   - pytest
+  - pytorch            # CPU build; the event GNN (Task A, representation 3)
   - pip
-  # - pytorch          # uncomment for the Phase-1 MLP (CPU build is fine)
+  - pip:
+    - torch_geometric  # graph neural network layers (SAGEConv, pooling)
