@@ -64,7 +64,10 @@ def weighted_auc(y: np.ndarray, scores: np.ndarray, w: np.ndarray) -> float:
     """
     y = np.asarray(y)
     scores = np.asarray(scores, dtype=float)
-    w = np.asarray(w, dtype=float)
+    # ROC is a ranking metric and sklearn requires non-negative weights; real NLO MC
+    # has negative-weight events, so use |w| here. (Signed weights are kept for the
+    # significance yields, where a negative event physically subtracts.)
+    w = np.abs(np.asarray(w, dtype=float))
     return float(roc_auc_score(y, scores, sample_weight=w))
 
 
@@ -211,7 +214,7 @@ def sic_curve(
     """
     y = np.asarray(y)
     scores = np.asarray(scores, dtype=float)
-    w = np.asarray(w, dtype=float)
+    w = np.abs(np.asarray(w, dtype=float))  # ranking metric; |w| for negative NLO weights
 
     fpr, tpr, _ = roc_curve(y, scores, sample_weight=w)
 
@@ -237,7 +240,7 @@ def plot_roc(y: np.ndarray, scores: np.ndarray, w: np.ndarray, out: str) -> str:
 
     y = np.asarray(y)
     scores = np.asarray(scores, dtype=float)
-    w = np.asarray(w, dtype=float)
+    w = np.abs(np.asarray(w, dtype=float))  # ranking metric; |w| for negative NLO weights
 
     fpr, tpr, _ = roc_curve(y, scores, sample_weight=w)
     auc = weighted_auc(y, scores, w)

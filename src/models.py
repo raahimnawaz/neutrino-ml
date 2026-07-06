@@ -44,6 +44,19 @@ _XGB_DEFAULTS: dict[str, Any] = {
 }
 
 
+def _abs_weights(w):
+    """Absolute value of the per-event weights, for classifier *training* only.
+
+    Real ATLAS NLO MC (e.g. the Sherpa W+jets samples) contains negative-weight events
+    -- a legitimate feature of the generator, not corrupt data. XGBoost and sklearn both
+    reject negative sample weights, and standard HEP practice is to train on |w| (keeping
+    every event's features) rather than dropping the ~14% with w < 0. The *evaluation*
+    still uses the true signed weights, where negative-weight events physically subtract
+    from the yields (see evaluation.significance_scan).
+    """
+    return np.abs(np.asarray(w, dtype=float))
+
+
 def train_xgb(
     X_train,
     y_train,
@@ -74,7 +87,7 @@ def train_xgb(
         hyper.update(params)
 
     clf = XGBClassifier(**hyper)
-    clf.fit(X_train, y_train, sample_weight=np.asarray(w_train, dtype=float))
+    clf.fit(X_train, y_train, sample_weight=_abs_weights(w_train))
     return clf
 
 
@@ -108,6 +121,6 @@ def train_logreg(X_train, y_train, w_train) -> Pipeline:
     pipe.fit(
         X_train,
         y_train,
-        logisticregression__sample_weight=np.asarray(w_train, dtype=float),
+        logisticregression__sample_weight=_abs_weights(w_train),
     )
     return pipe

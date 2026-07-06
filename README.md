@@ -42,18 +42,35 @@ conda env create -f environment.yml      # ROOT + uproot + xgboost + sklearn + .
 conda activate neutrino-ml
 ```
 
-## Quickstart — runs with NO real data
+## Quickstart
 
-The pipeline is proven end-to-end against a **synthetic** ntuple, so you can run it before
-downloading anything:
+**Real ATLAS data** (auto-downloaded from CERN's public EOS over XRootD, ~60 MB):
 
 ```bash
-python tests/make_sample.py     # writes data/root/sample_{signal,bkg}.root (uproot, MeV units)
-python -m src.pipeline          # read -> select -> weight -> train (XGBoost + logreg) -> evaluate
-pytest tests/                   # physics unit tests (pure numpy, no ROOT)
+python scripts/download_data.py   # reduced W dataset -> data/root/{mc,data}/  (skips existing)
+python -m src.pipeline            # Task A: classify W->l nu vs background (uses real data if present)
+python -m src.task_b_reco         # Task B: reconstruct the neutrino pz + W mass  -> results/wmass_reco.png
 ```
 
-Then drop real ATLAS files into `data/root/` and point `src/pipeline.py` at them.
+**No download needed** — the whole pipeline is also proven on a **synthetic** ntuple:
+
+```bash
+python tests/make_sample.py       # data/root/sample_{signal,bkg}.root (uproot, MeV units)
+python -m src.pipeline            # falls back to the synthetic fixtures automatically
+pytest tests/                     # physics unit tests (pure numpy, no ROOT)
+```
+
+### Results on real data (10 fb⁻¹)
+
+| | |
+|---|---|
+| events selected | 78,958 W→ℓν signal / 36,231 background |
+| Task A — weighted AUC | **XGBoost 0.825**, logistic-regression 0.733 |
+| Task B — reconstructed W mass | **median 80.38 GeV** (PDG: 80.379), 59% with a real ν-pz solution |
+
+Real NLO MC (Sherpa W+jets) contains ~14% **negative-weight events** — a genuine generator
+feature. The classifiers train on `|w|` (standard HEP practice); the significance keeps the
+signed weights, where negative events physically subtract. See `src/models.py`.
 
 ## Pipeline
 
@@ -82,13 +99,17 @@ src/
   weights.py       physical MC event weights
   features.py      per-event feature table
   dataset.py       read+select+weight+featurize -> parquet
-  models.py        XGBoost + logistic-regression
-  evaluation.py    weighted AUC, significance scan, SIC, plots
-  pipeline.py      end-to-end runner (python -m src.pipeline)
+  models.py        XGBoost + logistic-regression (train on |w| for negative NLO weights)
+  evaluation.py    weighted AUC, significance scan, SIC, plots, W-mass reconstruction
+  pipeline.py      Task A end-to-end runner (python -m src.pipeline)
+  task_b_reco.py   Task B: neutrino-pz + W-mass reconstruction (python -m src.task_b_reco)
+scripts/
+  samples.json     ATLAS Open Data process -> file mapping (signal=wjets, bkg=others)
+  download_data.py XRootD downloader for the reduced W dataset
 tests/
   test_physics.py  unit tests for the kinematics (run in CI, no ROOT)
   make_sample.py   synthetic ntuple generator for the smoke test
-config.yaml        selection cuts, luminosity, feature list
+config.yaml        selection cuts, luminosity, feature list, signal/background categories
 ```
 
 ## What's real vs simplified

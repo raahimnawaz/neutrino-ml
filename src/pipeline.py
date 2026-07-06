@@ -19,6 +19,7 @@ in terms of expected weighted event yields rather than raw counts.
 from __future__ import annotations
 
 import glob
+import json
 import os
 from typing import Any
 
@@ -199,22 +200,54 @@ def _load_config(path: str) -> dict:
         return yaml.safe_load(f)
 
 
+def _real_data_files(cfg: dict, root_dir: str):
+    """Build (signal, background) file lists from real ATLAS Open Data if present.
+
+    Reads scripts/samples.json for the process -> file mapping and cfg['samples'] for
+    which categories are signal vs background, then returns the local paths under
+    data/root/mc/ that actually exist. Returns (None, None) if no real MC is downloaded.
+    """
+    mc_dir = os.path.join(root_dir, "mc")
+    samples_path = os.path.join(REPO_ROOT, "scripts", "samples.json")
+    if not os.path.isdir(mc_dir) or not os.path.exists(samples_path):
+        return None, None
+    with open(samples_path, "r", encoding="utf-8") as f:
+        samples = json.load(f)
+
+    def files_for(categories):
+        out = []
+        for cat in categories:
+            for name in samples.get(cat, []):
+                p = os.path.join(mc_dir, f"{name}.1lep.root")
+                if os.path.exists(p):
+                    out.append(p)
+        return out
+
+    sig = files_for(cfg["samples"]["signal_categories"])
+    bkg = files_for(cfg["samples"]["background_categories"])
+    return (sig or None), (bkg or None)
+
+
 def main() -> None:
     cfg_path = os.path.join(REPO_ROOT, "config.yaml")
     cfg = _load_config(cfg_path)
-
     root_dir = _abspath(cfg["data"]["root_dir"])
-    signal_files = sorted(glob.glob(os.path.join(root_dir, "sample_signal*.root")))
-    bkg_files = sorted(glob.glob(os.path.join(root_dir, "sample_bkg*.root")))
 
-    if not signal_files or not bkg_files:
-        raise FileNotFoundError(
-            f"No sample fixtures found in {root_dir}. "
-            "Generate them first with:  python tests/make_sample.py"
-        )
+    # Prefer real ATLAS Open Data (data/root/mc/); fall back to synthetic fixtures.
+    signal_files, bkg_files = _real_data_files(cfg, root_dir)
+    if signal_files and bkg_files:
+        print(f"[pipeline] using REAL ATLAS Open Data: "
+              f"{len(signal_files)} signal + {len(bkg_files)} background files")
+    else:
+        signal_files = sorted(glob.glob(os.path.join(root_dir, "sample_signal*.root")))
+        bkg_files = sorted(glob.glob(os.path.join(root_dir, "sample_bkg*.root")))
+        if not signal_files or not bkg_files:
+            raise FileNotFoundError(
+                f"No real MC in {root_dir}/mc and no synthetic fixtures in {root_dir}. "
+                "Either  python scripts/download_data.py  or  python tests/make_sample.py"
+            )
+        print(f"[pipeline] using SYNTHETIC fixtures: {signal_files} / {bkg_files}")
 
-    print(f"[pipeline] signal files: {signal_files}")
-    print(f"[pipeline] background files: {bkg_files}")
     run(signal_files, bkg_files, cfg)
 
 

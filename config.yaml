@@ -1,9 +1,16 @@
 # neutrino-ml configuration. All energies/momenta in GeV *after* the read step
 # converts ATLAS Open Data's native MeV.
 data:
-  root_dir: data/root            # put ATLAS Open Data .root files here (gitignored)
+  root_dir: data/root            # ATLAS Open Data .root files (gitignored); mc/ + data/ subdirs
   processed_dir: data/processed
   lumi_pb: 10064.0               # 2020 ATLAS Open Data integrated luminosity, in pb^-1 (10.06 fb^-1)
+
+# Real-data process -> label mapping (categories are the keys in scripts/samples.json,
+# downloaded into data/root/mc/). Used when real MC files are present; otherwise the
+# pipeline falls back to the synthetic data/root/sample_{signal,bkg}*.root fixtures.
+samples:
+  signal_categories: [wjets]                              # W -> l nu (real neutrino)
+  background_categories: [zjets, ttbar, diboson, singletop]
 
 # W -> l nu event selection (one isolated high-pT lepton + real MET)
 selection:
