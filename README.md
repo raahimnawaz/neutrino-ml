@@ -72,6 +72,19 @@ Real NLO MC (Sherpa W+jets) contains ~14% **negative-weight events** — a genui
 feature. The classifiers train on `|w|` (standard HEP practice); the significance keeps the
 signed weights, where negative events physically subtract. See `src/models.py`.
 
+### Task B stretch — ML neutrino-pz regression (`src/task_b_regression.py`)
+
+The analytic reconstruction has no real solution for ~41% of events. An XGBoost regressor,
+trained on the analytic `pz` of the *solvable* events (no truth-level `pz` exists in the
+data — verified), **reproduces the physics-correct `pz` on held-out solvable events with
+RMSE 21.6 GeV (R² ≈ 0.96)**. But it does *not* rescue the unsolvable 41% — and the reason is
+the point: those events have **mT > mW** (100% of them, verified), so `m(ℓν) ≥ mT > mW` for
+*any* `pz`. No method can reconstruct them to the W peak; it's a hard kinematic floor, not a
+model limitation. The ML still gives a more physical `pz` everywhere (it removes the analytic
+fallback's pathological high-mass tail), useful for building the full neutrino 4-vector — but
+it can't beat physics. (Same lesson as the data-selection traps: verify what's *possible*
+before trying to model it.)
+
 ## Pipeline
 
 ```
