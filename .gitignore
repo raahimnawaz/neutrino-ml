@@ -1,13 +1,20 @@
-# data + artifacts are regenerable / large — never commit
+# Raw ROOT data: large (~44 MB) and regenerable via scripts/download_data.py — never commit.
 data/root/*
-data/processed/*
-saved_models/*
-results/*
-!**/.gitkeep
+!data/root/.gitkeep
 *.root
-*.parquet
+
+# Committed on purpose (so the repo is self-contained / reproducible without ROOT):
+#   data/processed/dataset.parquet   -- the ML-ready feature table (derived from ATLAS Open Data)
+#   saved_models/*                   -- the trained classifiers / regressors
+#   docs/figures/*.png               -- result plots shown in the README
+
+# results/ is scratch output (the committed showcase copies live in docs/figures/).
+results/*
+!results/.gitkeep
+
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
 .venv/
 *.log
+.pytest_cache/

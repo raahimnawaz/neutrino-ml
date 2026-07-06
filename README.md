@@ -84,6 +84,16 @@ GNN (0.781, `src/gnn_taskA.py`). The GNN learns straight from the objects with n
 summary, but on this ~2–6-object final state it doesn't beat gradient boosting — the expected
 "trees win on low-dimensional structured data" result, and an honest representation comparison.
 
+**Task A — classifier performance** (weighted, real data): ROC and the significance scan.
+
+![ROC curve](docs/figures/roc.png)
+![significance scan](docs/figures/significance.png)
+
+**Task B — the neutrino, reconstructed.** Left: the W transverse-mass Jacobian edge at `m_W`.
+Right: the full reconstructed W mass peaks sharply at 80.4 GeV once the neutrino `pz` is solved.
+
+![W-mass reconstruction](docs/figures/wmass_reco.png)
+
 Real NLO MC (Sherpa W+jets) contains ~14% **negative-weight events** — a genuine generator
 feature. The classifiers train on `|w|` (standard HEP practice); the significance keeps the
 signed weights, where negative events physically subtract. See `src/models.py`.
@@ -114,6 +124,12 @@ method" for this problem, but it comes **last**: `pz` depends critically on the 
 longitudinal momentum (one node), and the GNN's mean-pooling over ~4 nodes blurs exactly that.
 On a low-object-count final state, the direct/tabular model wins. A legitimate, measured result
 — matching the Task A finding that the event-GNN classifier (0.781) also trailed XGBoost (0.825).
+
+Left panels: predicted vs analytic `pz` on held-out solvable events. Right panels: the ~41%
+no-solution events (the analytic method's real-part fallback vs the ML `pz`).
+
+![tabular XGBoost pz regression](docs/figures/neutrino_pz_regression.png)
+![event-graph GNN pz regression](docs/figures/neutrino_pz_gnn.png)
 
 ## Pipeline
 
