@@ -57,8 +57,9 @@ conda activate neutrino-ml
 python scripts/download_data.py   # reduced W dataset -> data/root/{mc,data}/  (skips existing)
 python -m src.pipeline            # Task A: classify W->l nu vs background (uses real data if present)
 python -m src.task_b_reco         # Task B: reconstruct the neutrino pz + W mass  -> results/wmass_reco.png
-python -m src.task_b_regression   # Task B stretch: ML neutrino-pz regressor
-python -m src.gnn_taskA           # Task A rep-3: event-graph GNN (needs pytorch + torch_geometric)
+python -m src.task_b_regression   # Task B stretch: tabular ML neutrino-pz regressor
+python -m src.gnn_taskA           # Task A rep-3: event-graph GNN classifier
+python -m src.gnn_taskB           # Task B: event-graph GNN neutrino-pz regressor (topological)
 ```
 
 **No download needed** — the whole pipeline is also proven on a **synthetic** ntuple:
@@ -100,6 +101,20 @@ fallback's pathological high-mass tail), useful for building the full neutrino 4
 it can't beat physics. (Same lesson as the data-selection traps: verify what's *possible*
 before trying to model it.)
 
+**Three ways to predict where the neutrino is** (`pz`):
+
+| method | RMSE vs analytic `pz` | notes |
+|---|---|---|
+| analytic W-mass quadratic | — (exact where it exists) | no real solution for 41% (mT > mW) |
+| tabular XGBoost regressor (`task_b_regression.py`) | **21.6 GeV** | best; sees lepton kinematics directly |
+| event-graph GNN regressor (`gnn_taskB.py`) | 41.4 GeV | "topological" / geometric deep learning |
+
+The GNN — geometric deep learning on the event's object-graph — is the honest "topological
+method" for this problem, but it comes **last**: `pz` depends critically on the lepton's
+longitudinal momentum (one node), and the GNN's mean-pooling over ~4 nodes blurs exactly that.
+On a low-object-count final state, the direct/tabular model wins. A legitimate, measured result
+— matching the Task A finding that the event-GNN classifier (0.781) also trailed XGBoost (0.825).
+
 ## Pipeline
 
 ```
@@ -132,7 +147,8 @@ src/
   pipeline.py      Task A end-to-end runner (python -m src.pipeline)
   task_b_reco.py   Task B: neutrino-pz + W-mass reconstruction (python -m src.task_b_reco)
   task_b_regression.py  Task B stretch: ML neutrino-pz regressor
-  gnn_taskA.py     Task A representation 3: event-graph GNN (pytorch + torch_geometric)
+  gnn_taskA.py     Task A representation 3: event-graph GNN classifier
+  gnn_taskB.py     Task B: event-graph GNN neutrino-pz regressor (topological/geometric DL)
 scripts/
   samples.json     ATLAS Open Data process -> file mapping (signal=wjets, bkg=others)
   download_data.py XRootD downloader for the reduced W dataset
