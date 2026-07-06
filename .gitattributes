@@ -1,0 +1,6 @@
+# Normalize to LF so scripts don't break when checked out on Windows.
+* text=auto eol=lf
+*.root binary
+*.parquet binary
+*.png binary
+*.joblib binary

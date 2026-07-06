@@ -1,0 +1,34 @@
+# neutrino-ml configuration. All energies/momenta in GeV *after* the read step
+# converts ATLAS Open Data's native MeV.
+data:
+  root_dir: data/root            # put ATLAS Open Data .root files here (gitignored)
+  processed_dir: data/processed
+  lumi_pb: 10064.0               # 2020 ATLAS Open Data integrated luminosity, in pb^-1 (10.06 fb^-1)
+
+# W -> l nu event selection (one isolated high-pT lepton + real MET)
+selection:
+  lep_n: 1
+  require_tight_id: true
+  lep_pt_min_gev: 30.0
+  met_min_gev: 30.0
+  iso_ptcone_frac_max: 0.15      # lep_ptcone30 / lep_pt
+  iso_etcone_frac_max: 0.15      # lep_etcone20 / lep_pt
+  mt_min_gev: 0.0                # optional transverse-mass floor
+
+physics:
+  mW_gev: 80.379                 # PDG W mass, used by the neutrino-pz reconstruction
+
+features:                        # columns fed to the classifier (Task A)
+  - lep_pt
+  - met_et
+  - mt
+  - dphi_lep_met
+  - lep_eta
+  - lep_iso_ptcone
+  - jet_n
+  - ht
+  - lep_type
+
+train:
+  test_size: 0.3
+  random_state: 42

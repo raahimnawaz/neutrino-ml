@@ -1,0 +1,13 @@
+# data + artifacts are regenerable / large — never commit
+data/root/*
+data/processed/*
+saved_models/*
+results/*
+!**/.gitkeep
+*.root
+*.parquet
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+*.log

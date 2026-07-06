@@ -1,0 +1,18 @@
+name: neutrino-ml
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - root               # PyROOT + RDataFrame (Linux/macOS/WSL only)
+  - uproot             # pure-python ROOT reader (used to write the synthetic test fixture)
+  - awkward
+  - numpy
+  - pandas
+  - pyarrow
+  - scikit-learn
+  - xgboost            # gradient-boosted baseline (the workhorse for tabular HEP)
+  - matplotlib
+  - pyyaml
+  - pytest
+  - pip
+  # - pytorch          # uncomment for the Phase-1 MLP (CPU build is fine)

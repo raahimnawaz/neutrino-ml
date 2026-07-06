@@ -1,0 +1,23 @@
+name: tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  # Pure-numpy physics unit tests (transverse mass, delta-phi wrapping, neutrino-pz
+  # W-mass reconstruction). No ROOT needed -> runs fast on a stock Python image. The
+  # ROOT-dependent read/select/train pipeline is exercised locally against the
+  # synthetic fixture (tests/make_sample.py), not in CI.
+  physics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install test deps
+        run: pip install numpy pytest
+      - name: Run physics unit tests
+        run: pytest tests/test_physics.py -v
