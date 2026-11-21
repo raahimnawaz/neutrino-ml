@@ -1,6 +1,6 @@
-# neutrino-ml
+# neutrino-atlas-reconstruction
 
-[![tests](https://github.com/raahimnawaz/neutrino-ml/actions/workflows/tests.yml/badge.svg)](https://github.com/raahimnawaz/neutrino-ml/actions/workflows/tests.yml)
+[![tests](https://github.com/raahimnawaz/neutrino-atlas-reconstruction/actions/workflows/tests.yml/badge.svg)](https://github.com/raahimnawaz/neutrino-atlas-reconstruction/actions/workflows/tests.yml)
 [![python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
 [![ROOT](https://img.shields.io/badge/ROOT-RDataFrame-orange.svg)](https://root.cern/)
 [![data](https://img.shields.io/badge/data-ATLAS%20Open%20Data%2013%20TeV-red.svg)](https://opendata.atlas.cern/)
